@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'static-site'
+        IMAGE_TAG = "${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build(env.IMAGE_TAG)
+                }
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                archiveArtifacts artifacts: 'index.html', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Docker image built: ${env.IMAGE_TAG}"
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
