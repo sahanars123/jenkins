@@ -1,39 +1,21 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'static-site'
-        IMAGE_TAG = "${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                checkout scm
+                git 'https://github.com/sahanars123/jenkins.git'
             }
         }
-
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build(env.IMAGE_TAG)
-                }
+                bat 'docker build -t web-image-app .'
             }
         }
-
-        stage('Archive Artifacts') {
+        stage('Run Docker Container') {
             steps {
-                archiveArtifacts artifacts: 'index.html', fingerprint: true
+                bat 'docker run -d -p 8090:80 web-image-app'
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Docker image built: ${env.IMAGE_TAG}"
-        }
-        failure {
-            echo 'Pipeline failed.'
         }
     }
 }
